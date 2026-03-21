@@ -1,0 +1,64 @@
+# Intent
+
+Define what the benchmark should reward for `fast-multi-agent-tdd`.
+
+## Focus
+
+Benchmark three things separately:
+
+- trigger accuracy, especially non-necessary trigger cases
+- workflow discipline after trigger
+- output quality after trigger
+
+Do not collapse these into one vague pass or fail judgment. A skill can trigger correctly but still produce a bloated workflow, or it can have a good workflow but trigger when it should stay silent.
+
+## Trigger Dimensions
+
+For non-trigger evals, check:
+
+- the skill does not attach itself to pure review, explanation, or diagnosis requests
+- the response does not inject red-green-refactor, monitor-agent setup, or phase audits when no implementation was requested
+- the response stays inside the actual user intent
+
+## Workflow Dimensions
+
+Each positive eval should check these dimensions where relevant:
+
+- phase order is explicit: request map, red, green, regression, refactor
+- red starts with the next failing test
+- green does not edit tests
+- refactor starts only after green plus regression are clean
+- the full available suite is required after code changes
+- the monitor agent stays non-editing and performs phase-boundary checks
+- each phase hands off to `$review-with-multi-debate`
+- implementation ownership stays with one main agent rather than parallel workers
+
+## Output Quality Dimensions
+
+Each positive eval should also check:
+
+- no parallel worker choreography is introduced
+- green stays minimal and avoids speculative abstractions
+- conflicting existing tests are handled explicitly
+- refactor does not become a second implementation phase
+- the response stays concrete and actionable rather than writing process theater
+
+## Failure Patterns To Penalize
+
+- code-first behavior before a failing test exists
+- parallel workers being introduced for implementation, exploration, or test drafting
+- green or refactor mutating tests
+- skipping the full-suite regression check
+- vague audit language with no explicit `$review-with-multi-debate` handoff
+- proposing large infrastructure, fallback logic, or configuration knobs not demanded by the current failing test
+
+## Grading Guidance
+
+When grading `evals/evals.json` expectations:
+
+- grade trigger expectations independently from workflow and quality expectations
+- fail any expectation that is only implied weakly
+- require explicit mention for monitor behavior, phase order, and regression checks
+- require explicit absence of TDD orchestration in non-trigger evals
+- prefer lean plans over comprehensive but bloated plans
+- penalize plans that are technically correct but operationally wasteful

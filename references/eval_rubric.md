@@ -30,7 +30,9 @@ Each positive eval should check these dimensions where relevant:
 - refactor starts only after green plus regression are clean
 - the full available suite is required after code changes
 - the monitor agent stays non-editing and performs phase-boundary checks
-- each phase hands off to `$review-with-multi-debate`
+- Red hands off to `$review-with-multi-debate`
+- Green uses a deterministic gate instead of a debate by default
+- Refactor hands off to `$review-with-multi-debate` with the cumulative production diff from pre-Green to post-Refactor
 - implementation ownership stays with one main agent rather than parallel workers
 
 ## Output Quality Dimensions
@@ -41,6 +43,7 @@ Each positive eval should also check:
 - green stays minimal and avoids speculative abstractions
 - conflicting existing tests are handled explicitly
 - refactor does not become a second implementation phase
+- the cumulative Refactor audit checks final code smell, overreach, hidden fallbacks, and behavior drift
 - the response stays concrete and actionable rather than writing process theater
 
 ## Failure Patterns To Penalize
@@ -49,7 +52,8 @@ Each positive eval should also check:
 - parallel workers being introduced for implementation, exploration, or test drafting
 - green or refactor mutating tests
 - skipping the full-suite regression check
-- vague audit language with no explicit `$review-with-multi-debate` handoff
+- vague Red or Refactor audit language with no explicit `$review-with-multi-debate` handoff
+- running default Green debate instead of the cheaper Green gate
 - proposing large infrastructure, fallback logic, or configuration knobs not demanded by the current failing test
 
 ## Grading Guidance

@@ -1,4 +1,4 @@
 interface:
   display_name: "Fast Multi-Agent TDD"
   short_description: "Strict TDD with monitor-enforced phases"
-  default_prompt: "Use $fast-multi-agent-tdd to implement this feature with strict red-green-refactor, a monitor agent, and per-phase audits."
+  default_prompt: "Use $fast-multi-agent-tdd to implement this feature with strict red-green-refactor, a monitor agent, Red audit, Green gate, regression check, and cumulative Refactor audit."

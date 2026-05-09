@@ -1,13 +1,13 @@
 ---
 name: fast-multi-agent-tdd
-description: Use when the user wants a feature or bug fix delivered under strict Red-Green-Refactor, with a dedicated monitor agent and per-phase audits via $review-with-multi-debate.
+description: Use when the user wants a feature or bug fix delivered under strict Red-Green-Refactor, with a dedicated monitor agent, Red audit, Green gate, regression check, and cumulative Refactor audit via $review-with-multi-debate.
 ---
 
 # Fast Multi Agent TDD
 
 ## Overview
 
-Use this skill for real implementation work when the user wants strict TDD and strong phase discipline. Keep implementation ownership with one main agent and use the monitor only for enforcement and audit handoff.
+Use this skill for real implementation work when the user wants strict TDD and strong phase discipline. Keep implementation ownership with one main agent and use the monitor only for phase enforcement and audit handoff.
 
 This skill is not for generic reviews, one-line edits, or vague brainstorming. Use it when the task is "build or fix behavior under TDD" and the user cares about phase discipline, regression safety, and auditability.
 
@@ -17,7 +17,7 @@ Use this skill when the request includes some combination of:
 
 - add a feature or fix a bug
 - strict TDD, red-green-refactor, or regression checks
-- explicit auditing of each phase
+- explicit auditing of Red and Refactor phases
 - concern that green or refactor work might quietly mutate tests
 
 Do not use this skill when:
@@ -32,7 +32,9 @@ Do not use this skill when:
 - The main agent owns the critical path and the implementation work.
 - A dedicated monitor agent never edits files. It checks phase scope, records violations, and blocks phase completion if boundaries were crossed.
 - Do not spawn parallel workers for implementation, exploration, or test drafting. Extra workers here create chaos rather than speed.
-- Every phase ends with an audit using `$review-with-multi-debate`.
+- Red and Refactor end with audits using `$review-with-multi-debate`.
+- Green ends with a deterministic gate, not a debate by default: scope check, no test edits, targeted test pass, and saved production diff.
+- Refactor audit must review the cumulative production diff from pre-Green to post-Refactor, not only the refactor-only diff.
 - After any code change, run the full available test suite. This is the regression check.
 
 ## Roles
@@ -60,7 +62,7 @@ Before writing tests or code:
 
 Start the monitor agent here. It should open [references/phase_contracts.md](references/phase_contracts.md) and enforce it for the rest of the run.
 
-Audit this phase with `$review-with-multi-debate` using the request-map claim in [references/phase_audits.md](references/phase_audits.md).
+Record the request-map artifact for the later Red and Refactor audits. Do not run `$review-with-multi-debate` for request-map by default.
 
 ### 2. Red
 
@@ -101,7 +103,10 @@ Forbidden actions:
 Before closing green:
 
 - run the monitor scope check for `green`
-- run `$review-with-multi-debate` with the green claim from [references/phase_audits.md](references/phase_audits.md)
+- confirm no test files changed
+- confirm the targeted red test now passes
+- save the Green production diff for the later cumulative Refactor audit
+- do not run `$review-with-multi-debate` at Green by default
 
 ### 4. Regression Check
 
@@ -109,7 +114,7 @@ Run the full available test suite after the green change. This is not optional.
 
 If the suite is large, you may first run the closest package or component suite, but phase completion still requires the full available suite unless the environment makes that impossible.
 
-Audit this phase with the regression claim in [references/phase_audits.md](references/phase_audits.md).
+Record the targeted and full-suite results for the later cumulative Refactor audit. Do not run `$review-with-multi-debate` for regression by default.
 
 ### 5. Refactor
 
@@ -129,11 +134,12 @@ Forbidden actions:
 - sneaking in new behavior
 - using refactor as a second green phase
 
-After each refactor change:
+Before closing refactor:
 
 - run the full available test suite again
 - run the monitor scope check for `refactor`
-- audit the phase with the refactor claim from [references/phase_audits.md](references/phase_audits.md)
+- audit with `$review-with-multi-debate` using the cumulative Refactor claim from [references/phase_audits.md](references/phase_audits.md)
+- include the cumulative production diff from pre-Green to post-Refactor, the refactor-only diff, the request map, the Red audit result, the Green gate result, and regression results
 
 ### 6. Documentation Follow-Up
 
@@ -153,7 +159,8 @@ Forbidden actions:
 Before closing documentation:
 
 - run the monitor scope check for `docs`
-- audit the phase with the docs claim from [references/phase_audits.md](references/phase_audits.md)
+- record the docs artifact for final closeout
+- do not run `$review-with-multi-debate` for docs by default
 
 ### 7. Final Closeout
 
@@ -163,7 +170,7 @@ Before finishing:
 - summarize any unresolved risks
 - keep the final explanation short and oversight-friendly
 
-Run the final coverage audit from [references/phase_audits.md](references/phase_audits.md).
+Do not run a final `$review-with-multi-debate` by default. The final closeout should point to the Red audit, Green gate, regression result, and cumulative Refactor audit.
 
 ## Monitor Protocol
 
@@ -182,26 +189,29 @@ python scripts/phase_guard.py --phase docs --changed README.md docs/login.md
 ```
 
 3. If the guard fails, stop. Do not rationalize the violation. Move the work into the correct phase.
-4. Hand the phase artifact plus the claim to `$review-with-multi-debate`.
+4. Hand the phase artifact plus the claim to `$review-with-multi-debate` only for Red and Refactor. Other phases record artifacts for those audits and final closeout.
 
 Use [references/phase_contracts.md](references/phase_contracts.md) for the exact phase ownership rules and [references/phase_audits.md](references/phase_audits.md) for audit claims.
 
 ## Audit Integration
 
-Each audit should hand `$review-with-multi-debate`:
+Each `$review-with-multi-debate` audit should hand off:
 
 - the artifact for the phase
 - the exact claim text from [references/phase_audits.md](references/phase_audits.md)
 - the `feature_name`
 - the phase label
 
-Recommended audit phases:
+Default debate phases:
+
+- `red`
+- `refactor`
+
+Default gate/artifact phases:
 
 - `request_map`
-- `red`
 - `green`
 - `regression`
-- `refactor`
 - `docs`
 - `final`
 
@@ -209,11 +219,11 @@ Keep the phase artifact compact. Good artifacts are:
 
 - requirement map plus chosen test seam
 - failing test output
-- diff plus targeted passing test output
-- full suite results
-- refactor diff plus full suite results
+- Green gate output plus saved production diff
+- targeted and full suite results
+- cumulative production diff plus refactor diff plus full suite results
 
-For request-map, red, and final audits, also include:
+For Red and cumulative Refactor audits, also include:
 
 - the chosen execution path and the observable evidence that proves the path crosses the claimed boundary
 - if lower-level tests are claimed to be sufficient, the `strace` or `dtruss` output that shows no high-risk boundary was crossed on the minimal execution path
@@ -223,6 +233,6 @@ For request-map, red, and final audits, also include:
 
 - Use [scripts/trace_boundary_check.py](scripts/trace_boundary_check.py) to run `strace` or `dtruss` on a minimal execution path and emit JSON evidence about process, network, and filesystem boundary crossings.
 - Open [references/phase_contracts.md](references/phase_contracts.md) when you need exact edit-boundary rules.
-- Open [references/phase_audits.md](references/phase_audits.md) when preparing a phase audit with `$review-with-multi-debate`.
+- Open [references/phase_audits.md](references/phase_audits.md) when preparing the Red or cumulative Refactor audit with `$review-with-multi-debate`.
 - Use [scripts/phase_guard.py](scripts/phase_guard.py) for the monitor agent's scope check.
 - Use [evals/evals.json](evals/evals.json) to benchmark whether the skill triggers on the right work and stays lean.

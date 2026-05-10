@@ -120,6 +120,8 @@ Record the targeted and full-suite results for the later cumulative Refactor aud
 
 Only start refactor after green plus regression are both clean.
 
+Run `$code-smell-monitor` on the changed production scope before editing to have an understanding of code quality.
+
 Allowed actions:
 
 - simplify production code
@@ -137,6 +139,7 @@ Forbidden actions:
 Before closing refactor:
 
 - run the full available test suite again
+- rerun `$code-smell-monitor` on the same scope and record both report paths
 - run the monitor scope check for `refactor`
 - audit with `$review-with-multi-debate` using the cumulative Refactor claim from [references/phase_audits.md](references/phase_audits.md)
 - include the cumulative production diff from pre-Green to post-Refactor, the refactor-only diff, the request map, the Red audit result, the Green gate result, and regression results
